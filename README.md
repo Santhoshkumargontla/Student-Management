@@ -223,17 +223,5 @@ This project is designed to develop practical skills in:
 - Basic cloud deployment and networking
 - Application troubleshooting
 
-## Future Improvements
 
-- Student authentication and authorization
-- Pagination and advanced filtering
-- Input validation and improved error handling
-- Automated tests
-- CI/CD pipeline
-- HTTPS and production reverse proxy
-- Application monitoring and logging
-
-## License
-
-This project is intended for educational and portfolio use. Add a license file if you choose to distribute it under a specific open-source license.
 
