@@ -1,8 +1,4 @@
 const studentRoutes = require('./routes/studentRoutes');
-const dns = require('node:dns');
-
-// Fix SRV DNS resolution on this computer
-dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const express = require('express');
 const cors = require('cors');
