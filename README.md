@@ -1,227 +1,325 @@
-# Student-Management
-# Student Management System — MERN Stack
+tudentHub -- Student Management System
+StudentHub is a containerized student management application built with
+React, Node.js/Express, and MongoDB. It is deployed on
+Kubernetes using Minikube.
 
-A full-stack web application for managing student records using MongoDB, Express.js, React, and Node.js. This project is also intended to provide hands-on experience with Docker, Docker Compose, and AWS EC2 deployment.
+The project demonstrates Docker image creation, publishing images to
+Docker Hub, Kubernetes Deployments and Services, persistent MongoDB
+storage, and application verification.
+Features
+- View student records
+- Add a student
+- Edit student details
+- Delete a student
+- Store student records in MongoDB
+- Persist MongoDB data using a Kubernetes PersistentVolumeClaim
+- Serve the React frontend through Nginx
+- Route frontend /api/ requests to the Express backend
+Each student record contains:
+- name
+- email (unique)
+- course
+- year (1--6)
+- MongoDB timestamps (createdAt, updatedAt)
+Technology stack
+  Layer                          Technology
+  Frontend                       React, Vite
+Web server / reverse proxy     Nginx
+Backend                        Node.js, Express
+ODM                            Mongoose
+Database                       MongoDB 8
+Containerization               Docker
+Container registry             Docker Hub
+Orchestration                  Kubernetes
+Local Kubernetes environment   Minikube
+Architecture
+Browser
+   |
+   | HTTP :30081
+   v
+StudentHub Frontend Service (NodePort)
+   |
+   v
+React + Nginx Pod (port 80)
+   |
+   | /api/ requests
+   v
+StudentHub Backend Service (ClusterIP)
+   |
+   v
+Express Pod (port 5000)
+   |
+   | mongodb://studenthub-mongo:27017/studenthub
+   v
+StudentHub MongoDB Service (ClusterIP)
+   |
+   v
+MongoDB Pod (port 27017)
+   |
+   v
+PersistentVolumeClaim: studenthub-mongo-pvc (1Gi)
+The frontend Nginx configuration proxies API requests to the Kubernetes
+Service studenthub-backend on port 5000. MongoDB is reached through
+the internal Service name studenthub-mongo.
+Docker Hub images
+The published images used by the Kubernetes deployments are:
 
-## Project Overview
-
-The Student Management System provides a simple interface to create, view, update, delete, and search student records. It follows a client-server architecture, with React handling the user interface, Express.js providing REST APIs, and MongoDB storing student information.
-
-## Features
-
-- Add new student records
-- View all registered students
-- Update student information
-- Delete student records
-- Search students by name or email
-- Dashboard summary of student information
-- REST API integration between frontend and backend
-- Planned containerization using Docker and Docker Compose
-- Planned deployment on AWS EC2
-
-> **Project status:** In development. Features will be marked complete as they are implemented and tested.
-
-## Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| React | Frontend user interface |
-| Node.js | JavaScript runtime for the backend |
-| Express.js | REST API development |
-| MongoDB Atlas | Cloud database |
-| Mongoose | MongoDB object modeling |
-| Vite | Frontend development server and build tool |
-| Docker | Application containerization |
-| Docker Compose | Running multiple services together |
-| AWS EC2 | Planned cloud deployment |
-| Git and GitHub | Version control and source hosting |
-
-## Architecture
-
-```text
-                 User / Browser
-                       |
-                       v
-                React Frontend
-                       |
-                 HTTP REST API
-                       |
-                       v
-              Node.js + Express
-                       |
-                    Mongoose
-                       |
-                       v
-                 MongoDB Atlas
-
-Deployment plan:
-Docker Compose → AWS EC2
-```
-
-## Project Structure
-
-```text
+  Component   Image
+  Frontend    gontlasanthoshkumar2005/studenthub-frontend:v3
+Backend     gontlasanthoshkumar2005/studenthub-backend:v2
+- StudentHub Frontend on Docker
+  Hub
+- StudentHub Backend on Docker
+  Hub
+Project structure
+The relevant project structure is:
 student-management/
 ├── frontend/
-│   ├── public/
-│   ├── src/
-│   ├── package.json
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── vite.config.js
 │   └── ...
 ├── backend/
-│   ├── src/
-│   │   └── server.js
+│   ├── Dockerfile
 │   ├── .env
-│   ├── .gitignore
-│   └── package.json
-├── .gitignore
+│   └── src/
+│       ├── server.js
+│       ├── models/
+│       │   └── Student.js
+│       └── routes/
+│           └── studentRoutes.js
+├── kubernetes/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── mongodb-pvc.yaml
+├── docker-compose.yml
 └── README.md
-```
+The Kubernetes directory contains the manifests used for the Minikube
+deployment.
+Prerequisites
+Install and start:
+- Docker Desktop
+- Minikube
+- kubectl
+- Git (optional)
+On Windows, use PowerShell for the commands below. Start Docker Desktop
+and wait until the Docker Engine is running before starting Minikube.
+Run the application with Kubernetes (Minikube)
+1. Start Docker Desktop
+Open Docker Desktop and wait until its engine is running.
 
-The structure may evolve as the application develops.
+Check Docker:
+docker version
+docker info
+2. Start the existing Minikube cluster
+From PowerShell:
+minikube start --driver=docker
+Check cluster status:
+minikube status
+kubectl get nodes
+The Minikube node should report Ready.
+Use the existing minikube profile. Do not run minikube delete if
+you want to preserve the deployed applications and their persistent
+volumes.
 
-## Prerequisites
+3. Check existing Kubernetes resources
+From the project directory:
+cd C:\Users\santh\projects\student-management
+Check the deployments, pods, Services, and persistent volume claims:
+kubectl get deployments
+kubectl get pods
+kubectl get services
+kubectl get pvc
+If the StudentHub resources already exist and are healthy, you do not
+need to apply the manifests again.
+4. Apply the manifests (first deployment or after manifest changes)
+cd .\kubernetes
 
-Install or configure the following:
+kubectl apply -f .\mongodb-pvc.yaml
+kubectl apply -f .\service.yaml
+kubectl apply -f .\deployment.yaml
+Wait for each Deployment:
+kubectl rollout status deployment/studenthub-mongo --timeout=120s
+kubectl rollout status deployment/studenthub-backend --timeout=120s
+kubectl rollout status deployment/studenthub-frontend --timeout=120s
+Verify:
+kubectl get pods
+kubectl get deployments
+kubectl get services
+kubectl get pvc
+Expected StudentHub workloads:
+- studenthub-mongo -- 1/1 ready
+- studenthub-backend -- 1/1 ready
+- studenthub-frontend -- 1/1 ready
+- studenthub-mongo-pvc -- Bound
+5. Access StudentHub
+Run:
+minikube service studenthub-frontend --url
+Open the exact URL printed by Minikube in your browser.
 
-- Node.js and npm
-- Git
-- Visual Studio Code
-- Windows Subsystem for Linux (WSL) with Ubuntu, or another supported development environment
-- A MongoDB Atlas account and database cluster
+On Windows with the Docker driver, Minikube may create a local tunnel.
+Keep the PowerShell window running while using the URL. The URL and port
+can change when a new tunnel is started.
 
-Docker and AWS access will be required during the deployment phase.
+The StudentHub frontend Service uses NodePort 30081.
+API endpoints
+The backend exposes the following endpoints:
 
-## Getting Started
+  Method   Endpoint              Purpose
+  GET      /                   Backend welcome message
+GET      /api/health         Health check
+GET      /api/students       List students
+POST     /api/students       Create a student
+GET      /api/students/:id   Get one student
+PUT      /api/students/:id   Update a student
+DELETE   /api/students/:id   Delete a student
 
-### 1. Clone the Repository
+When accessed through the frontend tunnel, for example:
+http://127.0.0.1:<tunnel-port>/api/health
+http://127.0.0.1:<tunnel-port>/api/students
+Replace <tunnel-port> with the port in the URL returned by
+minikube service studenthub-frontend --url.
 
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd student-management
-```
-
-Replace the placeholder with your actual GitHub repository URL.
-
-### 2. Configure the Backend
-
-```bash
-cd backend
-npm install
-```
-
-Create a `.env` file inside the `backend` directory:
-
-```env
-PORT=5000
-MONGODB_URI=your_mongodb_atlas_connection_string
-```
-
-Replace the MongoDB placeholder with your actual Atlas connection string. Do not commit this file to GitHub.
-
-### 3. Configure the Frontend
-
-Open another terminal:
-
-```bash
-cd frontend
-npm install
-```
-
-### 4. Start the Backend
-
-From the `backend` directory:
-
-```bash
-npm run dev
-```
-
-The backend is expected to listen on port `5000` once its server implementation and development script are configured.
-
-### 5. Start the Frontend
-
-From the `frontend` directory:
-
-```bash
-npm run dev
-```
-
-Vite normally serves the frontend at:
-
-```text
-http://localhost:5173
-```
-
-The frontend and backend must both be running for API-driven features to work.
-
-## Environment Variables
-
-| Variable | Description |
-|---|---|
-| `PORT` | Backend server port |
-| `MONGODB_URI` | MongoDB Atlas connection string |
-
-Keep credentials and secrets in environment variables. Use a separate environment configuration for deployment where appropriate.
-
-## Planned API Endpoints
-
-The following endpoints describe the intended REST API. They must be implemented and tested before they can be used.
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/students` | Retrieve all students |
-| GET | `/api/students/:id` | Retrieve a student by ID |
-| POST | `/api/students` | Create a student |
-| PUT | `/api/students/:id` | Update a student |
-| DELETE | `/api/students/:id` | Delete a student |
-
-Example student record:
-
-```json
+The health endpoint should return a successful JSON response when the
+backend is reachable:
 {
-  "name": "Sample Student",
-  "email": "student@example.com",
-  "department": "Computer Science",
-  "year": 4
+  "success": true,
+  "message": "Student Management API is running!"
 }
-```
+MongoDB configuration and persistence
+The backend receives its MongoDB connection string from the Kubernetes
+Deployment environment:
+mongodb://studenthub-mongo:27017/studenthub
+MongoDB data is stored in the studenthub database, in the students
+collection.
 
-The actual schema and validation rules will be finalized during backend development.
+The MongoDB Deployment mounts the PersistentVolumeClaim
+studenthub-mongo-pvc at /data/db. The claim requests 1Gi of
+storage.
 
-## Docker and Deployment Roadmap
+Check the claim:
+kubectl get pvc studenthub-mongo-pvc
+Inspect student records:
+kubectl exec deployment/studenthub-mongo -- mongosh studenthub --eval "db.students.find().toArray()"
+Verify persistence after a MongoDB pod restart
+kubectl rollout restart deployment/studenthub-mongo
+kubectl rollout status deployment/studenthub-mongo --timeout=120s
+kubectl exec deployment/studenthub-mongo -- mongosh studenthub --eval "db.students.find().toArray()"
+Previously stored records should still be present after the pod restart.
+This verifies persistence across a pod restart; it does not by itself
+verify recovery from node or cluster failure.
+Useful Kubernetes commands
+Run these commands from any PowerShell directory:
+  Task                                Command
+  Check Minikube                      minikube status
 
-The deployment work will be completed after the application works locally.
+  Start Minikube                      minikube start --driver=docker
 
-1. Create a Dockerfile for the React frontend.
-2. Create a Dockerfile for the Node.js backend.
-3. Configure Docker Compose for the application services.
-4. Configure MongoDB connectivity and persistent storage where applicable.
-5. Test the application in containers.
-6. Launch an AWS EC2 instance and configure secure network access.
-7. Deploy the application and verify it through a browser.
+  Stop Minikube                       minikube stop
 
-MongoDB Atlas remains the planned cloud database, so a local MongoDB container is not required unless the deployment design changes.
+  List pods                           kubectl get pods
 
-## Security Considerations
+  List Deployments                    kubectl get deployments
 
-- Never commit `.env` files, passwords, or API secrets.
-- Restrict MongoDB Atlas network access to trusted IP addresses.
-- Use a database user with only the permissions the application requires.
-- Validate and sanitize incoming API data.
-- Avoid exposing the backend or database ports publicly in production.
-- Configure AWS security groups to allow only the required traffic.
+  List Services                       kubectl get services
 
-## Learning Objectives
+  List PVCs                           kubectl get pvc
 
-This project is designed to develop practical skills in:
+  StudentHub backend logs             kubectl logs deployment/studenthub-backend
 
-- Full-stack application development
-- REST API design and integration
-- MongoDB database connectivity
-- Environment-based configuration
-- Docker images and containers
-- Multi-service application orchestration
-- Basic cloud deployment and networking
-- Application troubleshooting
+  StudentHub frontend logs            kubectl logs deployment/studenthub-frontend
 
+  StudentHub MongoDB logs             kubectl logs deployment/studenthub-mongo
 
+  Restart StudentHub frontend         kubectl rollout restart deployment/studenthub-frontend
 
+  Restart StudentHub backend          kubectl rollout restart deployment/studenthub-backend
+Restart StudentHub MongoDB          kubectl rollout restart deployment/studenthub-mongo
+Daily startup after shutting down Docker Desktop or Windows
+You do not need to rebuild the images or recreate the Deployments for an
+ordinary restart.
+1. Open Docker Desktop and wait for the engine to become ready.
+2. Run:
+minikube start --driver=docker
+3. Verify:
+minikube status
+kubectl get pods
+4. Open StudentHub:
+minikube service studenthub-frontend --url
+Keep the tunnel's PowerShell window open while using the application.
+
+Closing VS Code does not delete Kubernetes resources. Stopping Minikube
+also does not normally delete its stored cluster resources or PVC data.
+Build and publish updated Docker images
+If application source code or Docker configuration changes, rebuild and
+push new image tags.
+
+From the project root:
+docker build -t gontlasanthoshkumar2005/studenthub-backend:v2 .\backend
+docker build -t gontlasanthoshkumar2005/studenthub-frontend:v3 .\frontend
+Push the images:
+docker login
+docker push gontlasanthoshkumar2005/studenthub-backend:v2
+docker push gontlasanthoshkumar2005/studenthub-frontend:v3
+If you publish a new tag, update the corresponding image in
+kubernetes/deployment.yaml before applying the Deployment manifest:
+kubectl apply -f .\kubernetes\deployment.yaml
+kubectl rollout status deployment/studenthub-backend
+kubectl rollout status deployment/studenthub-frontend
+For repeatable releases, prefer incrementing image tags (for example,
+v3, v4) rather than reusing an existing tag.
+Existing Food Ordering application in the same Minikube cluster
+This Minikube cluster also contains a separate Food Ordering
+application. Its existing resources use different names and a different
+frontend NodePort:
+
+  Application     Frontend Service          NodePort
+  Food Ordering   food-frontend            30080
+StudentHub      studenthub-frontend      30081
+
+StudentHub uses its own backend Service, MongoDB Service, and PVC. Avoid
+changing or deleting Food Ordering resources when managing StudentHub.
+Troubleshooting
+Minikube is stopped or kubectl cannot connect
+Start Docker Desktop, then run:
+minikube start --driver=docker
+kubectl get nodes
+A StudentHub pod is not Ready
+kubectl get pods
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+Replace <pod-name> with the actual pod name from kubectl get pods.
+Check backend-to-MongoDB connection
+kubectl logs deployment/studenthub-backend
+The backend should log:
+MongoDB connected successfully
+Check Service endpoints
+kubectl get endpoints studenthub-frontend
+kubectl get endpoints studenthub-backend
+kubectl get endpoints studenthub-mongo
+Frontend tunnel stopped
+Run the command again:
+minikube service studenthub-frontend --url
+Keep the terminal open while accessing the returned URL.
+Important data-safety notes
+- Do not run minikube delete unless you intentionally want to remove
+  the Minikube cluster.
+- Do not delete studenthub-mongo-pvc if you want to preserve
+  StudentHub database files.
+- Avoid kubectl delete pvc --all; it can affect storage claims
+  belonging to both applications.
+- Avoid docker compose down -v unless you intentionally want to
+  remove Compose-managed volumes.
+- Keep the Food Ordering and StudentHub resource names separate.
+Deployment verification
+The StudentHub deployment was verified in Minikube with:
+- Frontend, backend, and MongoDB pods reaching 1/1 Running.
+- All three StudentHub Deployments reaching 1/1 available.
+- studenthub-mongo-pvc reaching Bound.
+- Backend successfully connecting to MongoDB.
+- Student records being stored and retrieved from MongoDB.
+- A saved student record remaining available after restarting the
+  MongoDB pod.
+- Frontend Add, View, Edit, and Delete operations working.
+These results describe the tested deployment. Re-run the verification
+commands after future configuration or application changes.
