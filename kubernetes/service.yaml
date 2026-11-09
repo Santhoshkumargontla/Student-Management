@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: studenthub-mongo
+spec:
+  selector:
+    app: studenthub-mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: studenthub-backend
+spec:
+  selector:
+    app: studenthub-backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: studenthub-frontend
+spec:
+  selector:
+    app: studenthub-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30081
+  type: NodePort
