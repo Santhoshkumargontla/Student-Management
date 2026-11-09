@@ -396,6 +396,36 @@ The StudentHub application has been deployed and tested successfully.
 | Delete student | Working |
 | Data persistence after MongoDB pod restart | Verified |
 
+# StudentHub Frontend
+
+StudentHub is a web-based Student Management System built using React and Vite.
+
+## Features
+- Add new student records
+- View all students
+- Edit existing student details
+- Delete student records
+- Communicates with the Express.js backend through REST APIs
+
+## Technology Stack
+- React.js
+- Vite
+- Nginx
+- Docker
+- Kubernetes
+- Minikube
+
+## Docker Image
+
+```bash
+docker pull gontlasanthoshkumar2005/studenthub-frontend:v3
+```
+
+## Project
+
+StudentHub is deployed on Kubernetes using Minikube, with a separate backend and MongoDB database.
+
+
 ## 👨‍💻 Author
 
 **Gontla Santhosh Kumar**
